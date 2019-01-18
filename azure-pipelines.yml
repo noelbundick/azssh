@@ -33,6 +33,11 @@ steps:
   workingDirectory: '$(modulePath)'
   displayName: 'Build app'
 
+- task: CopyFiles@2
+  inputs:
+    contents: 'VERSION'
+    targetFolder: '$(Build.ArtifactStagingDirectory)'
+
 - task: PublishBuildArtifacts@1
   inputs:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)'
