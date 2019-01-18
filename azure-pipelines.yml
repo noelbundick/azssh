@@ -35,7 +35,7 @@ steps:
 
 - task: CopyFiles@2
   inputs:
-    contents: 'VERSION'
+    contents: '$(modulePath)/VERSION'
     targetFolder: '$(Build.ArtifactStagingDirectory)'
 
 - task: PublishBuildArtifacts@1
