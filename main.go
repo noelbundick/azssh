@@ -9,6 +9,7 @@ func main() {
 	log.SetFlags(0)
 	log.SetOutput(ioutil.Discard)
 
-	url := Provision()
+	token := GetToken()
+	url := Provision(token)
 	Connect(url)
 }
