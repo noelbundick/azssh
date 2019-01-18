@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"runtime"
 
 	"github.com/gorilla/websocket"
 )
@@ -44,9 +45,14 @@ func pumpInput(c *websocket.Conn, r io.Reader, done chan interface{}) {
 
 func Connect(url string) {
 	// disable input buffering
-	exec.Command("stty", "-F", "/dev/tty", "cbreak", "min", "1").Run()
 	// do not display entered characters on the screen
-	exec.Command("stty", "-F", "/dev/tty", "-echo").Run()
+	if runtime.GOOS == "linux" {
+		exec.Command("stty", "-F", "/dev/tty", "cbreak", "min", "1").Run()
+		exec.Command("stty", "-F", "/dev/tty", "-echo").Run()
+	} else if runtime.GOOS == "darwin" {
+		exec.Command("stty", "-f", "/dev/tty", "cbreak", "min", "1").Run()
+		exec.Command("stty", "-f", "/dev/tty", "-echo").Run()
+	}
 
 	done := make(chan interface{})
 
