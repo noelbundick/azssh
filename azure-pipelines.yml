@@ -37,6 +37,7 @@ steps:
   inputs:
     contents: '$(modulePath)/VERSION'
     targetFolder: '$(Build.ArtifactStagingDirectory)'
+    flattenFolders: true
 
 - task: PublishBuildArtifacts@1
   inputs:
