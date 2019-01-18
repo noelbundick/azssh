@@ -29,7 +29,7 @@ steps:
 - script: |
     go build -v -o $(Build.ArtifactStagingDirectory)/linux-amd64/azssh
     GOOS=darwin go build -v -o $(Build.ArtifactStagingDirectory)/darwin-amd64/azssh
-    GOOS=windows go build -v -o $(Build.ArtifactStagingDirectory)/windows-amd64/azssh
+    GOOS=windows go build -v -o $(Build.ArtifactStagingDirectory)/windows-amd64/azssh.exe
   workingDirectory: '$(modulePath)'
   displayName: 'Build app'
 
