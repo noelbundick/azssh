@@ -41,6 +41,7 @@ func sendRequest(token string, method string, url string, payload string) map[st
 }
 
 func createConsole(token string) string {
+	fmt.Println("Requesting a Cloud Shell.")
 	data := `{"properties": { "osType": "linux" } }`
 	result := sendRequest(token, "PUT", "https://management.azure.com/providers/Microsoft.Portal/consoles/default?api-version=2017-08-01-preview", data)
 	properties := result["properties"].(map[string]interface{})
@@ -48,6 +49,7 @@ func createConsole(token string) string {
 }
 
 func createTerminal(token string, consoleURL string) string {
+	fmt.Println("Connecting terminal...")
 	url := fmt.Sprintf("%s/terminals?cols=80&rows=30&shell=bash", consoleURL)
 	data := `{"tokens": []}`
 	result := sendRequest(token, "POST", url, data)
@@ -65,7 +67,7 @@ func getToken() string {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("code:", *code.Message)
+	fmt.Println(*code.Message)
 	browser.OpenURL(*code.VerificationURL)
 
 	token, err := adal.WaitForUserCompletion(sender, code)
