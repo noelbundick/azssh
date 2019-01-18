@@ -48,7 +48,7 @@ func createTerminal(token string, consoleURL string) string {
 	return result["socketUri"].(string)
 }
 
-func Provision(token string) string {
+func ProvisionCloudShell(token string) string {
 	consoleURL := createConsole(token)
 	terminalURI := createTerminal(token, consoleURL)
 	return terminalURI

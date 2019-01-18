@@ -43,7 +43,7 @@ func pumpInput(c *websocket.Conn, r io.Reader, done chan interface{}) {
 	}
 }
 
-func Connect(url string) {
+func ConnectToWebsocket(url string) {
 	// disable input buffering
 	// do not display entered characters on the screen
 	if runtime.GOOS == "linux" {

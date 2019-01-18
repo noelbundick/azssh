@@ -10,6 +10,6 @@ func main() {
 	log.SetOutput(ioutil.Discard)
 
 	token := GetToken()
-	url := Provision(token)
-	Connect(url)
+	url := ProvisionCloudShell(token)
+	ConnectToWebsocket(url)
 }
