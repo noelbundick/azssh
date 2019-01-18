@@ -54,7 +54,7 @@ func GetToken() string {
 	}
 
 	if token != nil {
-		if true || token.IsExpired() {
+		if token.IsExpired() {
 			spt, err := adal.NewServicePrincipalTokenFromManualToken(*config, clientID, "https://management.core.windows.net/", *token, refreshCallback)
 			if err != nil {
 				log.Println("token refresh failure:", err)
