@@ -2,6 +2,8 @@
 
 Connect to [Azure Cloud Shell](https://docs.microsoft.com/en-us/azure/cloud-shell/overview) from your terminal
 
+[![Build Status](https://dev.azure.com/noelbundick/noelbundick/_apis/build/status/azssh?branchName=master)](https://dev.azure.com/noelbundick/noelbundick/_build/latest?definitionId=27?branchName=master)
+
 ## Usage
 
 * Launch with `azssh`
