@@ -37,17 +37,26 @@ func saveToken(token adal.Token, tokenPath string) error {
 	return adal.SaveToken(tokenPath, 0600, token)
 }
 
-func GetToken() string {
-	tokenPath := getTokenCachePath()
-	config, err := adal.NewOAuthConfig("https://login.microsoftonline.com/", "common")
+func refreshToken(config *adal.OAuthConfig, token *adal.Token) *adal.Token {
+	spt, err := adal.NewServicePrincipalTokenFromManualToken(*config, clientID, "https://management.core.windows.net/", *token, tokenRefreshCallback)
 	if err != nil {
-		log.Fatal(err)
+		log.Println("token refresh failure:", err)
+	}
+	err = spt.Refresh()
+	if err != nil {
+		log.Println("token refresh failure:", err)
 	}
 
-	refreshCallback := func(token adal.Token) error {
-		return saveToken(token, tokenPath)
-	}
+	spToken := spt.Token()
+	return &spToken
+}
 
+func tokenRefreshCallback(token adal.Token) error {
+	tokenPath := getTokenCachePath()
+	return saveToken(token, tokenPath)
+}
+
+func loadToken(tokenPath string, config *adal.OAuthConfig) *adal.Token {
 	token, err := adal.LoadToken(tokenPath)
 	if err != nil {
 		log.Println(err)
@@ -55,19 +64,24 @@ func GetToken() string {
 
 	if token != nil {
 		if token.IsExpired() {
-			spt, err := adal.NewServicePrincipalTokenFromManualToken(*config, clientID, "https://management.core.windows.net/", *token, refreshCallback)
-			if err != nil {
-				log.Println("token refresh failure:", err)
-			}
-			err = spt.Refresh()
-			if err != nil {
-				log.Println("token refresh failure:", err)
-			}
-
-			spToken := spt.Token()
-			token = &spToken
+			token = refreshToken(config, token)
 		}
 
+		return token
+	}
+
+	return nil
+}
+
+func GetToken() string {
+	tokenPath := getTokenCachePath()
+	config, err := adal.NewOAuthConfig("https://login.microsoftonline.com/", "common")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	token := loadToken(tokenPath, config)
+	if token != nil {
 		return token.OAuthToken()
 	}
 
@@ -84,7 +98,7 @@ func GetToken() string {
 		log.Fatal(err)
 	}
 
-	spt, err := adal.NewServicePrincipalTokenFromManualToken(*config, clientID, "https://management.core.windows.net/", *token, nil)
+	spt, err := adal.NewServicePrincipalTokenFromManualToken(*config, clientID, "https://management.core.windows.net/", *token, tokenRefreshCallback)
 
 	err = saveToken(spt.Token(), tokenPath)
 	if err != nil {
