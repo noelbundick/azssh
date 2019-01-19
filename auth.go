@@ -73,6 +73,7 @@ func loadToken(tokenPath string, config *adal.OAuthConfig) *adal.Token {
 	return nil
 }
 
+// GetToken retrieves a valid OAuth token for use with Azure Resource Manager APIs
 func GetToken() string {
 	tokenPath := getTokenCachePath()
 	config, err := adal.NewOAuthConfig("https://login.microsoftonline.com/", "common")
