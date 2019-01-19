@@ -21,7 +21,10 @@ func sendRequest(token string, method string, url string, payload string) map[st
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
 
-	resp, _ := client.Do(req)
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatal(err)
+	}
 	defer resp.Body.Close()
 
 	body, _ := ioutil.ReadAll(resp.Body)
@@ -48,6 +51,7 @@ func createTerminal(token string, consoleURL string) string {
 	return result["socketUri"].(string)
 }
 
+// ProvisionCloudShell sets up a Cloud Shell and a websocket to connect into it
 func ProvisionCloudShell(token string) string {
 	consoleURL := createConsole(token)
 	terminalURI := createTerminal(token, consoleURL)

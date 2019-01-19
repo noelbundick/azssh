@@ -43,6 +43,7 @@ func pumpInput(c *websocket.Conn, r io.Reader, done chan interface{}) {
 	}
 }
 
+// ConnectToWebsocket wires up STDIN and STDOUT to a websocket, allowing you to use it as a terminal
 func ConnectToWebsocket(url string) {
 	// disable input buffering
 	// do not display entered characters on the screen
