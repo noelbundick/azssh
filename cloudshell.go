@@ -7,7 +7,18 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+
+	"golang.org/x/crypto/ssh/terminal"
 )
+
+func getTerminalSize() (int, int) {
+	width, height, err := terminal.GetSize(0)
+	if err != nil {
+		width = 80
+		height = 30
+	}
+	return width, height
+}
 
 func sendRequest(token string, method string, url string, payload string) map[string]interface{} {
 	client := &http.Client{}
@@ -45,7 +56,8 @@ func createConsole(token string) string {
 
 func createTerminal(token string, consoleURL string) string {
 	fmt.Println("Connecting terminal...")
-	url := fmt.Sprintf("%s/terminals?cols=80&rows=30&shell=bash", consoleURL)
+	cols, rows := getTerminalSize()
+	url := fmt.Sprintf("%s/terminals?cols=%d&rows=%d&shell=bash", consoleURL, cols, rows)
 	data := `{"tokens": []}`
 	result := sendRequest(token, "POST", url, data)
 	return result["socketUri"].(string)
