@@ -1,4 +1,4 @@
-package main
+package azssh
 
 import (
 	"bytes"
@@ -54,18 +54,18 @@ func createConsole(token string) string {
 	return properties["uri"].(string)
 }
 
-func createTerminal(token string, consoleURL string) string {
+func createTerminal(token string, consoleURL string, shellType string) string {
 	fmt.Println("Connecting terminal...")
 	cols, rows := getTerminalSize()
-	url := fmt.Sprintf("%s/terminals?cols=%d&rows=%d&shell=bash", consoleURL, cols, rows)
+	url := fmt.Sprintf("%s/terminals?cols=%d&rows=%d&shell=%s", consoleURL, cols, rows, shellType)
 	data := `{"tokens": []}`
 	result := sendRequest(token, "POST", url, data)
 	return result["socketUri"].(string)
 }
 
 // ProvisionCloudShell sets up a Cloud Shell and a websocket to connect into it
-func ProvisionCloudShell(token string) string {
+func ProvisionCloudShell(token string, shellType string) string {
 	consoleURL := createConsole(token)
-	terminalURI := createTerminal(token, consoleURL)
+	terminalURI := createTerminal(token, consoleURL, shellType)
 	return terminalURI
 }
