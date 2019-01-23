@@ -29,13 +29,15 @@ steps:
   displayName: 'Get dependencies'
 
 - script: |
-    go build -v -o azssh
+    export VERSION=$(cat VERSION)
+
+    go build -v -o azssh -ldflags "-X github.com/noelbundick/azssh/cmd.Version=$VERSION"
     tar cvf $(Build.ArtifactStagingDirectory)/azssh-linux-amd64.tar.gz ./azssh
 
-    GOOS=darwin go build -v -o azssh
+    GOOS=darwin go build -v -o azssh -ldflags "-X github.com/noelbundick/azssh/cmd.Version=$VERSION"
     tar cvf $(Build.ArtifactStagingDirectory)/azssh-darwin-amd64.tar.gz ./azssh
 
-    GOOS=windows go build -v -o azssh.exe
+    GOOS=windows go build -v -o azssh.exe -ldflags "-X github.com/noelbundick/azssh/cmd.Version=$VERSION"
     tar cvf $(Build.ArtifactStagingDirectory)/azssh-windows-amd64.tar.gz ./azssh.exe
   workingDirectory: '$(modulePath)'
   displayName: 'Build app'
