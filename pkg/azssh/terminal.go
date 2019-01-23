@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"os/signal"
 	"runtime"
 
 	"github.com/gorilla/websocket"
@@ -46,6 +47,17 @@ func pumpInput(c *websocket.Conn, r io.Reader) {
 	}
 }
 
+func pumpInterrupt(c *websocket.Conn) {
+	var interrupt = make(chan os.Signal, 1)
+	signal.Notify(interrupt, os.Interrupt)
+
+	for {
+		<-interrupt
+		sigint := []byte{'\003'}
+		c.WriteMessage(websocket.TextMessage, sigint)
+	}
+}
+
 // GetTerminalSize gets the size of the current terminal
 func GetTerminalSize() TerminalSize {
 	cols, rows, err := terminal.GetSize(int(os.Stdout.Fd()))
@@ -81,6 +93,7 @@ func ConnectToWebsocket(url string, resize chan<- TerminalSize) {
 
 	go pumpOutput(c, os.Stdout, done)
 	go pumpInput(c, os.Stdin)
+	go pumpInterrupt(c)
 
 	<-done
 }
