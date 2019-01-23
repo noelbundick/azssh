@@ -21,18 +21,20 @@ func dial(url string) *websocket.Conn {
 }
 
 // read from ws
-func pumpOutput(c *websocket.Conn, w io.Writer) {
+func pumpOutput(c *websocket.Conn, w io.Writer, done chan struct{}) {
+	defer close(done)
 	for {
 		_, message, err := c.ReadMessage()
 		if err != nil {
 			log.Println("read:", err)
+			break
 		}
 		w.Write(message)
 	}
 }
 
 // send to ws
-func pumpInput(c *websocket.Conn, r io.Reader, done chan interface{}) {
+func pumpInput(c *websocket.Conn, r io.Reader) {
 	data := make([]byte, 1)
 	for {
 		r.Read(data)
@@ -44,6 +46,7 @@ func pumpInput(c *websocket.Conn, r io.Reader, done chan interface{}) {
 	}
 }
 
+// GetTerminalSize gets the size of the current terminal
 func GetTerminalSize() TerminalSize {
 	cols, rows, err := terminal.GetSize(int(os.Stdout.Fd()))
 	if err != nil {
@@ -71,13 +74,13 @@ func ConnectToWebsocket(url string, resize chan<- TerminalSize) {
 	// hook into terminal resizes
 	go pumpResize(resize)
 
-	done := make(chan interface{})
+	done := make(chan struct{})
 
 	c := dial(url)
 	defer c.Close()
 
-	go pumpOutput(c, os.Stdout)
-	go pumpInput(c, os.Stdin, done)
+	go pumpOutput(c, os.Stdout, done)
+	go pumpInput(c, os.Stdin)
 
 	<-done
 }
