@@ -7,18 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-
-	"golang.org/x/crypto/ssh/terminal"
 )
-
-func getTerminalSize() (int, int) {
-	width, height, err := terminal.GetSize(0)
-	if err != nil {
-		width = 80
-		height = 30
-	}
-	return width, height
-}
 
 func sendRequest(token string, method string, url string, payload string) map[string]interface{} {
 	client := &http.Client{}
@@ -54,18 +43,26 @@ func createConsole(token string) string {
 	return properties["uri"].(string)
 }
 
-func createTerminal(token string, consoleURL string, shellType string) string {
+func createTerminal(token string, consoleURL string, shellType string, initialSize TerminalSize) (string, string) {
 	fmt.Println("Connecting terminal...")
-	cols, rows := getTerminalSize()
-	url := fmt.Sprintf("%s/terminals?cols=%d&rows=%d&shell=%s", consoleURL, cols, rows, shellType)
+	url := fmt.Sprintf("%s/terminals?cols=%d&rows=%d&shell=%s", consoleURL, initialSize.Cols, initialSize.Rows, shellType)
 	data := `{"tokens": []}`
 	result := sendRequest(token, "POST", url, data)
-	return result["socketUri"].(string)
+	return result["id"].(string), result["socketUri"].(string)
+}
+
+func resizeTerminal(token string, consoleURL string, terminalID string, resize <-chan TerminalSize) {
+	for {
+		newSize := <-resize
+		url := fmt.Sprintf("%s/terminals/%s/size?cols=%d&rows=%d", consoleURL, terminalID, newSize.Cols, newSize.Rows)
+		sendRequest(token, "POST", url, "")
+	}
 }
 
 // ProvisionCloudShell sets up a Cloud Shell and a websocket to connect into it
-func ProvisionCloudShell(token string, shellType string) string {
+func ProvisionCloudShell(token string, shellType string, initialSize TerminalSize, resize <-chan TerminalSize) string {
 	consoleURL := createConsole(token)
-	terminalURI := createTerminal(token, consoleURL, shellType)
-	return terminalURI
+	terminalID, websocketURI := createTerminal(token, consoleURL, shellType, initialSize)
+	go resizeTerminal(token, consoleURL, terminalID, resize)
+	return websocketURI
 }

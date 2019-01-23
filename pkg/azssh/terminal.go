@@ -5,10 +5,15 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"os/signal"
 	"runtime"
+	"syscall"
 
 	"github.com/gorilla/websocket"
+	"golang.org/x/crypto/ssh/terminal"
 )
+
+var sigwinch = make(chan os.Signal, 1)
 
 func dial(url string) *websocket.Conn {
 	log.Println("connect:", url)
@@ -43,8 +48,28 @@ func pumpInput(c *websocket.Conn, r io.Reader, done chan interface{}) {
 	}
 }
 
+func GetTerminalSize() TerminalSize {
+	cols, rows, err := terminal.GetSize(int(os.Stdout.Fd()))
+	if err != nil {
+		cols = 80
+		rows = 30
+	}
+	return TerminalSize{
+		Rows: rows,
+		Cols: cols,
+	}
+}
+
+func pumpSigwinch(resize chan<- TerminalSize) {
+	for {
+		<-sigwinch
+		newSize := GetTerminalSize()
+		resize <- newSize
+	}
+}
+
 // ConnectToWebsocket wires up STDIN and STDOUT to a websocket, allowing you to use it as a terminal
-func ConnectToWebsocket(url string) {
+func ConnectToWebsocket(url string, resize chan<- TerminalSize) {
 	// disable input buffering
 	// do not display entered characters on the screen
 	if runtime.GOOS == "linux" {
@@ -53,6 +78,12 @@ func ConnectToWebsocket(url string) {
 	} else if runtime.GOOS == "darwin" {
 		exec.Command("stty", "-f", "/dev/tty", "cbreak", "min", "1").Run()
 		exec.Command("stty", "-f", "/dev/tty", "-echo").Run()
+	}
+
+	// hook into terminal resizes
+	if runtime.GOOS == "linux" || runtime.GOOS == "darwin" {
+		signal.Notify(sigwinch, syscall.SIGWINCH)
+		go pumpSigwinch(resize)
 	}
 
 	done := make(chan interface{})

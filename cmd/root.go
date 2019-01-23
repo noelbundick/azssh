@@ -13,8 +13,12 @@ var rootCmd = &cobra.Command{
 	Short: "Launch Azure Cloud Shell from your terminal",
 	Run: func(cmd *cobra.Command, args []string) {
 		token := azssh.GetToken()
-		url := azssh.ProvisionCloudShell(token, shellType)
-		azssh.ConnectToWebsocket(url)
+
+		resize := make(chan azssh.TerminalSize)
+		initialSize := azssh.GetTerminalSize()
+
+		url := azssh.ProvisionCloudShell(token, shellType, initialSize, resize)
+		azssh.ConnectToWebsocket(url, resize)
 	},
 }
 var shellType string
