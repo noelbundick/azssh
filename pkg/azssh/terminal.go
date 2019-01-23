@@ -5,15 +5,11 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"os/signal"
 	"runtime"
-	"syscall"
 
 	"github.com/gorilla/websocket"
 	"golang.org/x/crypto/ssh/terminal"
 )
-
-var sigwinch = make(chan os.Signal, 1)
 
 func dial(url string) *websocket.Conn {
 	log.Println("connect:", url)
@@ -60,14 +56,6 @@ func GetTerminalSize() TerminalSize {
 	}
 }
 
-func pumpSigwinch(resize chan<- TerminalSize) {
-	for {
-		<-sigwinch
-		newSize := GetTerminalSize()
-		resize <- newSize
-	}
-}
-
 // ConnectToWebsocket wires up STDIN and STDOUT to a websocket, allowing you to use it as a terminal
 func ConnectToWebsocket(url string, resize chan<- TerminalSize) {
 	// disable input buffering
@@ -81,10 +69,7 @@ func ConnectToWebsocket(url string, resize chan<- TerminalSize) {
 	}
 
 	// hook into terminal resizes
-	if runtime.GOOS == "linux" || runtime.GOOS == "darwin" {
-		signal.Notify(sigwinch, syscall.SIGWINCH)
-		go pumpSigwinch(resize)
-	}
+	go pumpResize(resize)
 
 	done := make(chan interface{})
 
